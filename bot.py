@@ -139,6 +139,41 @@ def handle_user_input(message):
                 send_func = getattr(bot, f'send_{message.content_type}')
                 send_func(CHANNEL_ID, file_id, caption=message.caption if message.caption else '')
             bot.send_message(user_id, "✅ Опубліковано в каналі.")
+@bot.message_handler(commands=['launch'])
+def launch_post(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    text = (
+        "🚀 Ctrl.Tap офіційно стартує!\n\n"
+        "Тут ви знайдете найцікавіші новини, думки, меми та дотики до світу технологій і життя.\n\n"
+        "Дякуємо, що з нами — буде гаряче 🔥\n"
+        "Підписуйся, коментуй, надсилай свої повідомлення прямо в бота ✉️"
+    )
+
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("✉️ Написати боту", url="https://t.me/CtrlTaps_Bot"))
+
+    bot.send_message(CHANNEL_ID, text, reply_markup=markup)
+    bot.send_message(message.chat.id, "✅ Пост опубліковано.")
+
+# ⬇️ Далі вже йде знайомий код
+import threading
+from flask import Flask
+
+def run_bot():
+    bot.polling(none_stop=True)
+
+bot_thread = threading.Thread(target=run_bot)
+bot_thread.start()
+
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Bot is running'
+
+app.run(host="0.0.0.0", port=10000)
 
 import threading
 from flask import Flask
