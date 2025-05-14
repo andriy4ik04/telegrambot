@@ -139,4 +139,21 @@ def handle_user_input(message):
                 send_func(CHANNEL_ID, file_id, caption=message.caption if message.caption else '')
             bot.send_message(user_id, "✅ Опубліковано в каналі.")
 
-bot.polling(none_stop=True)
+import threading
+from flask import Flask
+
+# 🔁 Запускаємо polling у фоновому потоці
+def run_bot():
+    bot.polling(none_stop=True)
+
+bot_thread = threading.Thread(target=run_bot)
+bot_thread.start()
+
+# 🌐 Flask-сервер для Render
+app = Flask(__name__)
+
+@app.route('/')
+def index():
+    return 'Bot is running'
+
+app.run(host="0.0.0.0", port=10000)
