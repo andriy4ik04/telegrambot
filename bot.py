@@ -129,7 +129,11 @@ def handle_user_input(message):
 
         else:
             if message.content_type == 'text':
-                bot.send_message(CHANNEL_ID, message.text)
+                if message.text.startswith('/'):
+                     return  # Не публікувати команди, типу /launch
+
+        bot.send_message(CHANNEL_ID, message.text)
+
 
             else:
                 if message.content_type == 'photo':
