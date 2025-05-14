@@ -1,7 +1,9 @@
+
 import telebot
 from telebot import types
 import json
 import os
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,7 +16,6 @@ bot = telebot.TeleBot(TOKEN)
 waiting_for_message = {}
 pending_messages = {}
 
-# Завантаження слів-фільтрів з окремого файлу
 FILTER_FILE = 'filter_words.json'
 if os.path.exists(FILTER_FILE):
     with open(FILTER_FILE, 'r', encoding='utf-8') as f:
@@ -74,6 +75,24 @@ def handle_callback(call):
             bot.send_message(call.message.chat.id, "💬 Напиши відповідь для користувача:")
             waiting_for_message[call.message.chat.id] = ("reply", user_id)
 
+@bot.message_handler(commands=['launch'])
+def launch_post(message):
+    if message.from_user.id != ADMIN_ID:
+        return
+
+    text = (
+        "🚀 Ctrl.Tap офіційно стартує!\n\n"
+        "Тут ви знайдете найцікавіші новини, думки, меми та дотики до світу технологій і життя.\n\n"
+        "Дякуємо, що з нами — буде гаряче 🔥\n"
+        "Підписуйся, коментуй, надсилай свої повідомлення прямо в бота ✉️"
+    )
+
+    markup = types.InlineKeyboardMarkup()
+    markup.add(types.InlineKeyboardButton("✉️ Написати боту", url="https://t.me/CtrlTaps_Bot"))
+
+    bot.send_message(CHANNEL_ID, text, reply_markup=markup)
+    bot.send_message(message.chat.id, "✅ Пост опубліковано.")
+
 @bot.message_handler(content_types=['text', 'photo', 'video', 'document'])
 def handle_user_input(message):
     user_id = message.from_user.id
@@ -130,11 +149,8 @@ def handle_user_input(message):
         else:
             if message.content_type == 'text':
                 if message.text.startswith('/'):
-                     return  # Не публікувати команди, типу /launch
-
-        bot.send_message(CHANNEL_ID, message.text)
-
-
+                    return
+                bot.send_message(CHANNEL_ID, message.text)
             else:
                 if message.content_type == 'photo':
                     file_id = message.photo[-1].file_id
@@ -143,53 +159,18 @@ def handle_user_input(message):
                 send_func = getattr(bot, f'send_{message.content_type}')
                 send_func(CHANNEL_ID, file_id, caption=message.caption if message.caption else '')
             bot.send_message(user_id, "✅ Опубліковано в каналі.")
-@bot.message_handler(commands=['launch'])
-def launch_post(message):
-    if message.from_user.id != ADMIN_ID:
-        return
 
-    text = (
-        "🚀 Ctrl.Tap офіційно стартує!\n\n"
-        "Тут ви знайдете найцікавіші новини, думки, меми та дотики до світу технологій і життя.\n\n"
-        "Дякуємо, що з нами — буде гаряче 🔥\n"
-        "Підписуйся, коментуй, надсилай свої повідомлення прямо в бота ✉️"
-    )
-
-    markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("✉️ Написати боту", url="https://t.me/CtrlTaps_Bot"))
-
-    bot.send_message(CHANNEL_ID, text, reply_markup=markup)
-    bot.send_message(message.chat.id, "✅ Пост опубліковано.")
-
-# ⬇️ Далі вже йде знайомий код
-import threading
+# запуск бота та Flask
 from flask import Flask
 
 def run_bot():
+    time.sleep(2)
     bot.polling(none_stop=True)
-
-bot_thread = threading.Thread(target=run_bot)
-bot_thread.start()
-
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return 'Bot is running'
-
-app.run(host="0.0.0.0", port=10000)
 
 import threading
-from flask import Flask
-
-# 🔁 Запускаємо polling у фоновому потоці
-def run_bot():
-    bot.polling(none_stop=True)
-
 bot_thread = threading.Thread(target=run_bot)
 bot_thread.start()
 
-# 🌐 Flask-сервер для Render
 app = Flask(__name__)
 
 @app.route('/')
