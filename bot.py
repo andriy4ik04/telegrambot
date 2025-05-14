@@ -129,7 +129,8 @@ def handle_user_input(message):
 
         else:
             if message.content_type == 'text':
-                bot.send_message(CHANNEL_ID, f"🔹 {message.text}")
+                bot.send_message(CHANNEL_ID, message.text)
+
             else:
                 if message.content_type == 'photo':
                     file_id = message.photo[-1].file_id
