@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.environ['BOT_TOKEN']
-CHANNEL_ID = -1002612055353  # заміни, якщо потрібно
-ADMIN_ID = 470240474         # заміни, якщо потрібно
+CHANNEL_ID = -1002612055353
+ADMIN_ID = 470240474
 
 bot = telebot.TeleBot(TOKEN)
 app = Flask(__name__)
@@ -27,18 +27,19 @@ def start(message):
 def handle_user_message(message):
     user_id = message.chat.id
     if user_id == ADMIN_ID:
-        bot.send_message(user_id, "🔧 Ви адміністратор. Для вас доступні інші функції.")
+        bot.send_message(user_id, "🔧 Ви адміністратор.")
         return
 
     waiting_for_message[user_id] = message
 
     markup = types.InlineKeyboardMarkup()
-    markup.add(types.InlineKeyboardButton("✅ Надіслати", callback_data="submit"))
-    markup.add(types.InlineKeyboardButton("❌ Скасувати", callback_data="cancel"))
-
+    markup.add(
+        types.InlineKeyboardButton("✅ Надіслати", callback_data="submit"),
+        types.InlineKeyboardButton("❌ Скасувати", callback_data="cancel")
+    )
     bot.send_message(user_id, "Підтвердити надсилання повідомлення?", reply_markup=markup)
 
-@bot.callback_query_handler(func=lambda call: call.data in ["submit", "cancel", "approve", "decline", "reply"])
+@bot.callback_query_handler(func=lambda call: True)
 def callback_handler(call):
     user_id = call.from_user.id
     data = call.data
@@ -54,7 +55,6 @@ def callback_handler(call):
         pending_messages[msg.message_id] = (msg, user_id)
 
         caption = f"📨 Повідомлення від {name} (@{username} | ID: {user_id})"
-
         markup = types.InlineKeyboardMarkup()
         markup.add(
             types.InlineKeyboardButton("✅ Опублікувати", callback_data=f"approve:{msg.message_id}"),
@@ -74,10 +74,9 @@ def callback_handler(call):
         bot.send_message(user_id, "❌ Надсилання скасовано.")
         waiting_for_message.pop(user_id, None)
 
-    elif data.startswith("approve:") or data.startswith("decline:") or data.startswith("reply:"):
-        parts = data.split(":")
-        action = parts[0]
-        msg_id = int(parts[1])
+    elif any(data.startswith(prefix) for prefix in ["approve:", "decline:", "reply:"]):
+        action, msg_id_str = data.split(":")
+        msg_id = int(msg_id_str)
         msg, original_user = pending_messages.get(msg_id, (None, None))
 
         if not msg:
@@ -113,5 +112,5 @@ if __name__ == "__main__":
     webhook_url = f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}/webhook"
     bot.remove_webhook()
     time.sleep(1)
-    bot.set_webhook(url=webhook_url)
+    bot.set_webhook(url=webhook_url, drop_pending_updates=True)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
