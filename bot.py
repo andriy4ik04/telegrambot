@@ -7,7 +7,7 @@ import time
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv("TELEGRAM_TOKEN")
+TOKEN = os.environ['BOT_TOKEN']
 CHANNEL_ID = -1002612055353
 ADMIN_ID = 470240474
 
