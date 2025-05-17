@@ -21,10 +21,10 @@ pending_messages = {}
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
-    markup.add("✉️ Написати повідомлення")
-    markup.add("☕ Донат", "ℹ️ Про мене")
-    markup.add("📄 Допомога", "❌ Вийти")
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row("✉️ Написати повідомлення")
+    markup.row("☕ Донат", "ℹ️ Про мене")
+    markup.row("📄 Допомога", "❌ Вийти")
     bot.send_message(
         message.chat.id,
         "👋 Вітаю! Скористайся кнопками або надішли мені своє повідомлення, і я передам його адміну!",
