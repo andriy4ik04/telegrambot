@@ -98,8 +98,12 @@ def reply_to_user(message, user_id):
     bot.send_message(user_id, f"📢 Відповідь від адміністратора:\n\n{message.text}")
     bot.send_message(ADMIN_ID, "✅ Відповідь надіслана.")
 
-# === FLASK WEBHOOK ===
+# === ГОЛОВНА СТОРІНКА (щоб не було 404) ===
+@app.route('/', methods=['GET'])
+def index():
+    return "✅ Бот працює", 200
 
+# === FLASK WEBHOOK ===
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = telebot.types.Update.de_json(request.data.decode("utf-8"))
@@ -107,7 +111,6 @@ def webhook():
     return "OK", 200
 
 # === ГОЛОВНИЙ ЗАПУСК ===
-
 if __name__ == "__main__":
     webhook_url = f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}/webhook"
     bot.remove_webhook()
