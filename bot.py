@@ -26,9 +26,6 @@ def start(message):
 @bot.message_handler(content_types=['text', 'photo', 'video', 'document', 'audio', 'voice'])
 def handle_user_message(message):
     user_id = message.chat.id
-    if user_id == ADMIN_ID:
-        bot.send_message(user_id, "🔧 Ви адміністратор.")
-        return
 
     waiting_for_message[user_id] = message
 
@@ -98,19 +95,19 @@ def reply_to_user(message, user_id):
     bot.send_message(user_id, f"📢 Відповідь від адміністратора:\n\n{message.text}")
     bot.send_message(ADMIN_ID, "✅ Відповідь надіслана.")
 
-# === ГОЛОВНА СТОРІНКА (щоб не було 404) ===
+# === ГОЛОВНА СТОРІНКА ===
 @app.route('/', methods=['GET'])
 def index():
     return "✅ Бот працює", 200
 
-# === FLASK WEBHOOK ===
+# === WEBHOOK ===
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = telebot.types.Update.de_json(request.data.decode("utf-8"))
     bot.process_new_updates([update])
     return "OK", 200
 
-# === ГОЛОВНИЙ ЗАПУСК ===
+# === ЗАПУСК ===
 if __name__ == "__main__":
     webhook_url = f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}/webhook"
     bot.remove_webhook()
