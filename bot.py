@@ -42,7 +42,7 @@ def handle_text_buttons(message):
     else:
         handle_user_message(message)
 
-@bot.message_handler(content_types=['photo', 'video', 'document', 'audio', 'voice'])
+@bot.message_handler(content_types=['text', 'photo', 'video', 'document', 'audio', 'voice'])
 def handle_user_message(message):
     user_id = message.chat.id
     waiting_for_message[user_id] = message
