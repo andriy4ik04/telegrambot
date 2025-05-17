@@ -21,12 +21,30 @@ pending_messages = {}
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, "👋 Надішли своє повідомлення, щоб я передав його адміну!")
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add("☕ Донат", "ℹ️ Про мене")
+    markup.add("📄 Допомога", "❌ Вийти")
+    bot.send_message(message.chat.id, "👋 Вітаю! Надішліть своє повідомлення, щоб я передав його адміну.", reply_markup=markup)
 
-@bot.message_handler(content_types=['text', 'photo', 'video', 'document', 'audio', 'voice'])
+@bot.message_handler(func=lambda message: True, content_types=['text'])
+def handle_text_buttons(message):
+    text = message.text
+    if text == "☕ Донат":
+        markup = types.InlineKeyboardMarkup()
+        markup.add(types.InlineKeyboardButton("Підтримати", url="https://donate.example.com"))
+        bot.send_message(message.chat.id, "Дякуємо за підтримку!", reply_markup=markup)
+    elif text == "ℹ️ Про мене":
+        bot.send_message(message.chat.id, "📊 Ctrl.Tap — канал новин, спорту, технологій та геймінгу. Ми публікуємо тільки найцікавіше!")
+    elif text == "📄 Допомога":
+        bot.send_message(message.chat.id, "🤔 Просто напиши нам повідомлення, а ми передамо його адміну. Він вирішить, чи опублікувати його в каналі.")
+    elif text == "❌ Вийти":
+        bot.send_message(message.chat.id, "Ви вийшли з меню. Напишіть /start, щоб почати знову.", reply_markup=types.ReplyKeyboardRemove())
+    else:
+        handle_user_message(message)
+
+@bot.message_handler(content_types=['photo', 'video', 'document', 'audio', 'voice'])
 def handle_user_message(message):
     user_id = message.chat.id
-
     waiting_for_message[user_id] = message
 
     markup = types.InlineKeyboardMarkup()
@@ -36,7 +54,7 @@ def handle_user_message(message):
     )
     bot.send_message(user_id, "Підтвердити надсилання повідомлення?", reply_markup=markup)
 
-@bot.callback_query_handler(func=lambda call: True)
+@bot.callback_query_handler(func=lambda call: call.data)
 def callback_handler(call):
     user_id = call.from_user.id
     data = call.data
@@ -71,43 +89,49 @@ def callback_handler(call):
         bot.send_message(user_id, "❌ Надсилання скасовано.")
         waiting_for_message.pop(user_id, None)
 
-    elif any(data.startswith(prefix) for prefix in ["approve:", "decline:", "reply:"]):
-        action, msg_id_str = data.split(":")
-        msg_id = int(msg_id_str)
+    elif data.startswith("approve:"):
+        msg_id = int(data.split(":")[1])
         msg, original_user = pending_messages.get(msg_id, (None, None))
-
-        if not msg:
-            bot.answer_callback_query(call.id, "Повідомлення не знайдено.")
-            return
-
-        if action == "approve":
+        if msg:
             bot.copy_message(CHANNEL_ID, msg.chat.id, msg.message_id)
             bot.send_message(original_user, "✅ Ваше повідомлення опубліковано.")
-        elif action == "decline":
+            pending_messages.pop(msg_id, None)
+        else:
+            bot.answer_callback_query(call.id, "Повідомлення не знайдено.")
+
+    elif data.startswith("decline:"):
+        msg_id = int(data.split(":")[1])
+        msg, original_user = pending_messages.get(msg_id, (None, None))
+        if msg:
             bot.send_message(original_user, "❌ Ваше повідомлення відхилено.")
-        elif action == "reply":
+            pending_messages.pop(msg_id, None)
+        else:
+            bot.answer_callback_query(call.id, "Повідомлення не знайдено.")
+
+    elif data.startswith("reply:"):
+        msg_id = int(data.split(":")[1])
+        msg, original_user = pending_messages.get(msg_id, (None, None))
+        if msg:
             bot.send_message(user_id, "✉️ Напишіть відповідь користувачу:")
             bot.register_next_step_handler_by_chat_id(user_id, lambda m: reply_to_user(m, original_user))
-
-        pending_messages.pop(msg_id, None)
+            pending_messages.pop(msg_id, None)
+        else:
+            bot.answer_callback_query(call.id, "Повідомлення не знайдено.")
 
 def reply_to_user(message, user_id):
     bot.send_message(user_id, f"📢 Відповідь від адміністратора:\n\n{message.text}")
     bot.send_message(ADMIN_ID, "✅ Відповідь надіслана.")
 
-# === ГОЛОВНА СТОРІНКА ===
 @app.route('/', methods=['GET'])
 def index():
     return "✅ Бот працює", 200
 
-# === WEBHOOK ===
 @app.route('/webhook', methods=['POST'])
 def webhook():
     update = telebot.types.Update.de_json(request.data.decode("utf-8"))
     bot.process_new_updates([update])
     return "OK", 200
 
-# === ЗАПУСК ===
 if __name__ == "__main__":
     webhook_url = f"https://{os.environ['RENDER_EXTERNAL_HOSTNAME']}/webhook"
     bot.remove_webhook()
