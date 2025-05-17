@@ -52,9 +52,9 @@ load_first_users()
 def start(message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     markup.row("✉️ Написати повідомлення")
+    markup.row("🔍 Стати першим")
     markup.row("☕ Донат", "ℹ️ Про мене")
-    markup.row("📄 Допомога", "🔍 Стати першим")
-    markup.row("❌ Вийти")
+    markup.row("📄 Допомога", "❌ Вийти")
     bot.send_message(
         message.chat.id,
         "👋 Вітаю! Скористайся кнопками або надішли мені своє повідомлення, і я передам його адміну!",
@@ -66,10 +66,10 @@ def show_first_users(message):
     if message.from_user.id != ADMIN_ID:
         return
     if not first_users:
-        bot.send_message(message.chat.id, "Список перших підписників порожній.")
+        bot.send_message(message.chat.id, "Список перших пiдписникiв порожнiй.")
     else:
         users = "\n".join([str(uid) for uid in sorted(first_users)])
-        bot.send_message(message.chat.id, f"Список перших підписників:\n{users}")
+        bot.send_message(message.chat.id, f"Список перших пiдписникiв:\n{users}")
 
 # === Обробка кнопок ===
 
