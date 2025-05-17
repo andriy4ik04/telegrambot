@@ -21,10 +21,15 @@ pending_messages = {}
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
     markup.add("☕ Донат", "ℹ️ Про мене")
-    markup.add("📄 Допомога", "✉️ Написати повідомлення", "❌ Вийти")
-    bot.send_message(message.chat.id, "👋 Вітаю! Скористайся кнопками або надішли мені своє повідомлення, і я передам його адміну!", reply_markup=markup)
+    markup.add("📄 Допомога", "✉️ Написати повідомлення")
+    markup.add("❌ Вийти")
+    bot.send_message(
+        message.chat.id,
+        "👋 Вітаю! Скористайся кнопками або надішли мені своє повідомлення, і я передам його адміну!",
+        reply_markup=markup
+    )
 
 @bot.message_handler(func=lambda message: True, content_types=['text'])
 def handle_text_buttons(message):
@@ -38,7 +43,7 @@ def handle_text_buttons(message):
     elif text == "📄 Допомога":
         bot.send_message(message.chat.id, "🤔 Просто напиши нам повідомлення, а ми передамо його адміну. Він вирішить, чи опублікувати його в каналі.")
     elif text == "✉️ Написати повідомлення":
-        bot.send_message(message.chat.id, "Напиши сюди своє повідомлення та натисни із нижченаведених кнопок! Я передам його адміну.")
+        bot.send_message(message.chat.id, "Напиши сюди своє повідомлення та натисни кнопку нижче! Я передам його адміну.")
     elif text == "❌ Вийти":
         bot.send_message(message.chat.id, "Ви вийшли з меню. Напишіть /start, щоб почати знову.", reply_markup=types.ReplyKeyboardRemove())
     else:
